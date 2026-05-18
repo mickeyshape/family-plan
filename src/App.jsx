@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
 import { 
   getFirestore, 
@@ -34,6 +34,14 @@ const db = getFirestore(app);
 const IconCalendar = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>;
 const IconUser = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
 const IconUtensils = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>;
+const IconNoDinner = ({ className }) => (
+  <div className="relative inline-flex items-center justify-center">
+    <IconUtensils className={className} />
+    <svg className="absolute inset-0 w-full h-full text-red-500 opacity-90 drop-shadow-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" />
+    </svg>
+  </div>
+);
 const IconChevronLeft = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>;
 const IconChevronRight = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
 const IconChevronUp = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>;
@@ -46,25 +54,38 @@ const IconSun = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width
 const IconClock = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
 const IconSchool = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 22v-4a2 2 0 1 0-4 0v4"/><path d="m18 10 4 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8l4-2"/><path d="M18 5v17"/><path d="m4 6 8-4 8 4"/><path d="M6 5v17"/><circle cx="12" cy="9" r="2"/></svg>;
 const IconBriefcase = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>;
-const IconPlane = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3-3-1c-.5-.2-1-.1-1.4.3l-.3.3c-.3.3-.3.8-.1 1.1L7 20l4.7 4.7c.3.2.8.2 1.1-.1l.3-.3c.4-.4.5-.9.3-1.4l-1-3 3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.3c.4-.2.6-.6.5-1.1Z"/></svg>;
+const IconCar = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v9c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>;
 const IconMedical = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><path d="M12 8v8"/><path d="M8 12h8"/></svg>;
 const IconTrophy = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
-const IconMessage = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
+const IconMessage = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
 const IconCheck = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>;
 const IconCopy = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>;
 
-const STATUS_OPTIONS = [
-  { id: 'no_dinner', label: '夕食不要', Icon: IconUtensils, color: 'bg-red-50', dinner: false, iconProps: { className: "text-red-500" } },
-  { id: 'day_off', label: '休み', Icon: IconSun, color: 'bg-orange-50', dinner: true, iconProps: { className: "text-orange-500" } },
-  { id: 'school', label: '学校', Icon: IconSchool, color: 'bg-blue-50', dinner: true, hasDetail: 'periods' },
-  { id: 'work', label: '仕事', Icon: IconBriefcase, color: 'bg-indigo-50', dinner: true, hasDetail: 'work_type' },
-  { id: 'baito', label: 'バイト', Icon: IconBriefcase, color: 'bg-yellow-50', dinner: true, hasDetail: 'time_range' },
-  { id: 'club', label: '部活', Icon: IconTrophy, color: 'bg-green-50', dinner: true },
-  { id: 'early', label: '早帰り', Icon: IconClock, color: 'bg-orange-50', dinner: true, hasDetail: 'time_single' },
-  { id: 'travel', label: '旅行', Icon: IconPlane, color: 'bg-emerald-50', dinner: true },
-  { id: 'play', label: '遊び', Icon: IconClock, color: 'bg-purple-50', dinner: true, hasDetail: 'time_range' },
-  { id: 'hospital', label: '病院', Icon: IconMedical, color: 'bg-pink-50', dinner: true, hasDetail: 'time_range' },
-  { id: 'comment', label: 'メモ', Icon: IconMessage, color: 'bg-slate-50', dinner: true, hasDetail: 'text' },
+const ICON_MAP = {
+  Utensils: IconUtensils,
+  NoDinner: IconNoDinner,
+  Sun: IconSun,
+  School: IconSchool,
+  Briefcase: IconBriefcase,
+  Trophy: IconTrophy,
+  Clock: IconClock,
+  Car: IconCar,
+  Medical: IconMedical,
+  Message: IconMessage
+};
+
+const INITIAL_STATUS_OPTIONS = [
+  { id: 'no_dinner', label: '夕食不要', iconId: 'NoDinner', color: 'bg-red-50', dinner: false, iconProps: { className: "text-red-500" } },
+  { id: 'day_off', label: '休み', iconId: 'Sun', color: 'bg-orange-50', dinner: true, iconProps: { className: "text-orange-500" } },
+  { id: 'school', label: '学校', iconId: 'School', color: 'bg-blue-50', dinner: true, hasDetail: 'periods' },
+  { id: 'work', label: '仕事', iconId: 'Briefcase', color: 'bg-indigo-50', dinner: true, hasDetail: 'work_type' },
+  { id: 'baito', label: 'バイト', iconId: 'Briefcase', color: 'bg-yellow-50', dinner: true, hasDetail: 'time_range' },
+  { id: 'club', label: '部活', iconId: 'Trophy', color: 'bg-green-50', dinner: true },
+  { id: 'early', label: '早帰り', iconId: 'Clock', color: 'bg-orange-50', dinner: true, hasDetail: 'time_single' },
+  { id: 'travel', label: '外出', iconId: 'Car', color: 'bg-emerald-50', dinner: true, hasDetail: 'place_time', placeholder: '例：公園、実家' },
+  { id: 'play', label: '遊び', iconId: 'Clock', color: 'bg-purple-50', dinner: true, hasDetail: 'place_time', placeholder: '例：ディズニー、遊園地' },
+  { id: 'hospital', label: '病院', iconId: 'Medical', color: 'bg-pink-50', dinner: true, hasDetail: 'place_time', placeholder: '例：眼科、耳鼻科' },
+  { id: 'comment', label: 'メモ', iconId: 'Message', color: 'bg-slate-50', dinner: true, hasDetail: 'text' },
 ];
 
 const DEFAULT_MEMBERS = [
@@ -76,6 +97,9 @@ const DEFAULT_MEMBERS = [
 ];
 
 // --- Helpers ---
+/**
+ * 終了時刻を計算する（開始時刻からデフォルトで2時間後を返す）
+ */
 const calculateEndTime = (startTime) => {
   if (!startTime) return "";
   const [h, m] = startTime.split(':').map(Number);
@@ -84,20 +108,34 @@ const calculateEndTime = (startTime) => {
 };
 
 // --- Sub-component for handling local inputs (IME Fix) ---
-const DetailInput = ({ initialValue, onSave, placeholder, type = "text", onFocus, defaultTime }) => {
+/**
+ * 入力欄の値をローカルで管理し、フォーカスが外れた際やEnterキーが押された際に保存処理を実行するコンポーネント
+ * (日本語入力のIME確定時の挙動を考慮した実装)
+ */
+const DetailInput = ({ initialValue, onSave, placeholder, type = "text", onFocus, defaultTime, maxLength }) => {
   const [localValue, setLocalValue] = useState(initialValue || "");
+  const isFocused = useRef(false);
   
-  useEffect(() => { setLocalValue(initialValue || ""); }, [initialValue]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { 
+      if (!isFocused.current) {
+        setLocalValue(initialValue || ""); 
+      }
+    }, [initialValue]);
   
-  const handleBlur = () => { if (localValue !== initialValue) onSave(localValue); };
+  const handleBlur = () => { 
+    isFocused.current = false;
+    if (localValue !== initialValue) onSave(localValue); 
+  };
   const handleKeyDown = (e) => { if (e.key === 'Enter') e.target.blur(); };
   
   // 入力欄を触った瞬間に、空ならdefaultTimeをセットするハック
   const handleInteraction = (e) => {
+    isFocused.current = true;
     if (type === 'time' && !localValue && defaultTime) {
       const dt = typeof defaultTime === 'function' ? defaultTime() : defaultTime;
       setLocalValue(dt);
-      onSave(dt);
+      // 即時保存を削除（レースコンディション防止。blur時またはEnter時に保存される）
     }
     if (onFocus && e.type === 'focus') onFocus(e);
   };
@@ -108,6 +146,7 @@ const DetailInput = ({ initialValue, onSave, placeholder, type = "text", onFocus
       className="w-full p-2 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-400"
       placeholder={placeholder}
       value={localValue}
+      maxLength={maxLength}
       onChange={(e) => setLocalValue(e.target.value)}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
@@ -120,6 +159,7 @@ const DetailInput = ({ initialValue, onSave, placeholder, type = "text", onFocus
 export default function App() {
   const [user, setUser] = useState(null);
   const [members, setMembers] = useState([]);
+  const [statusOptions, setStatusOptions] = useState([]);
   const [schedules, setSchedules] = useState({});
   const [currentDate, setCurrentDate] = useState(new Date());
   const [holidays, setHolidays] = useState({}); // 祝日データ用ステート
@@ -133,6 +173,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   // 祝日データの取得 (コンポーネントマウント時)
+  // 日本の祝日一覧を取得し、カレンダーの表示に反映させる
   useEffect(() => {
     fetch('https://holidays-jp.github.io/api/v1/date.json')
       .then(res => res.json())
@@ -141,6 +182,7 @@ export default function App() {
   }, []);
 
   // Auth: 匿名ログイン
+  // ユーザーごとの認証を行い、Firestore への安全なアクセスを可能にする
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -152,7 +194,8 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Firestore Sync: 実運用向け
+  // Firestore Sync: リアルタイム同期
+  // メンバーリストとスケジュール情報を Firestore から取得し、変更を検知してステートを更新する
   useEffect(() => {
     if (!user) return;
     
@@ -180,11 +223,60 @@ export default function App() {
       querySnapshot.forEach((doc) => { data[doc.id] = doc.data(); });
       setSchedules(data);
       setLoading(false);
-    }, (err) => setLoading(false));
+    }, () => setLoading(false));
 
-    return () => { unsubMembers(); unsubSchedules(); };
+    const optionsRef = doc(db, 'config', 'status_options');
+    const unsubOptions = onSnapshot(optionsRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        let loadedOptions = data.options;
+        
+        // 強固な配列チェックとフォールバック
+        if (!Array.isArray(loadedOptions) || loadedOptions.length === 0) {
+          loadedOptions = INITIAL_STATUS_OPTIONS;
+        }
+        
+        // マイグレーション: ラベル、アイコン、詳細設定、プレースホルダー、夕食フラグが最新でない場合に更新する
+        const needsUpdate = INITIAL_STATUS_OPTIONS.some(initialOpt => {
+          const currentOpt = loadedOptions.find(o => o.id === initialOpt.id);
+          return !currentOpt || currentOpt.hasDetail !== initialOpt.hasDetail || currentOpt.label !== initialOpt.label || currentOpt.iconId !== initialOpt.iconId || currentOpt.placeholder !== initialOpt.placeholder || currentOpt.dinner !== initialOpt.dinner;
+        });
+
+        if (needsUpdate) {
+          const updatedOptions = INITIAL_STATUS_OPTIONS.map(initialOpt => {
+            const currentOpt = loadedOptions.find(o => o.id === initialOpt.id);
+            if (currentOpt) return { ...currentOpt, label: initialOpt.label, iconId: initialOpt.iconId, hasDetail: initialOpt.hasDetail, placeholder: initialOpt.placeholder, dinner: initialOpt.dinner };
+            return initialOpt;
+          });
+          setDoc(optionsRef, { options: updatedOptions }, { merge: true }).catch(e => console.error(e));
+          setStatusOptions(updatedOptions);
+        } else {
+          setStatusOptions(loadedOptions);
+        }
+      } else {
+        setStatusOptions(INITIAL_STATUS_OPTIONS);
+        setDoc(optionsRef, { options: INITIAL_STATUS_OPTIONS }).catch(e => console.error(e));
+      }
+    });
+
+    return () => { unsubMembers(); unsubSchedules(); unsubOptions(); };
   }, [user]);
 
+  // 設定のリセット機能（救済用）
+  const forceResetOptions = async () => {
+    if (!user || !window.confirm("設定をリセットしてもよろしいですか？（予定データは消えません）")) return;
+    const optionsRef = doc(db, 'config', 'status_options');
+    try {
+      await setDoc(optionsRef, { options: INITIAL_STATUS_OPTIONS });
+      window.location.reload();
+    } catch (e) {
+      alert("リセットに失敗しました: " + e.message);
+    }
+  };
+
+  /**
+   * カレンダーに表示する2週間分（14日間）の日付オブジェクトのリストを生成する
+   */
   const dateList = useMemo(() => {
     const list = [];
     const start = new Date(currentDate);
@@ -199,6 +291,9 @@ export default function App() {
     return list;
   }, [currentDate]);
 
+  /**
+   * Dateオブジェクトを 'YYYY-MM-DD' 形式の文字列に変換する
+   */
   const formatDate = (date) => {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -206,6 +301,9 @@ export default function App() {
     return `${y}-${m}-${d}`;
   };
 
+  /**
+   * 指定された日付とメンバーに対して、予定（ステータス）の追加または削除を行う
+   */
   const toggleStatus = async (statusId) => {
     if (!selectedCell || !user) return;
     const { dateStr, memberId } = selectedCell;
@@ -224,6 +322,9 @@ export default function App() {
     try { await setDoc(doc(db, 'schedules', dateStr), newDayData); } catch (err) { console.error(err); }
   };
 
+  /**
+   * 予定（ステータス）に紐づく詳細情報（時間帯、出社/在宅、メモなど）を更新する
+   */
   const updateDetail = async (statusId, detail) => {
     if (!selectedCell || !user) return;
     const { dateStr, memberId } = selectedCell;
@@ -238,14 +339,47 @@ export default function App() {
     try { await setDoc(doc(db, 'schedules', dateStr), newDayData); } catch (err) { console.error(err); }
   };
 
+  /**
+   * 自由入力メモを更新する（独立した入力欄用）
+   */
+  const updateMemo = async (text) => {
+    if (!selectedCell || !user) return;
+    const { dateStr, memberId } = selectedCell;
+    const currentDayData = schedules[dateStr] || {};
+    let items = currentDayData[memberId] || [];
+    
+    let newItems;
+    if (text.trim() === "") {
+      newItems = items.filter(item => (typeof item === 'string' ? item : item.id) !== 'comment');
+    } else {
+      const exists = items.find(item => (typeof item === 'string' ? item : item.id) === 'comment');
+      if (exists) {
+        newItems = items.map(item => {
+          if ((typeof item === 'string' ? item : item.id) === 'comment') return { id: 'comment', detail: text };
+          return item;
+        });
+      } else {
+        newItems = [...items, { id: 'comment', detail: text }];
+      }
+    }
+    
+    const newDayData = { ...currentDayData, [memberId]: newItems };
+    try { await setDoc(doc(db, 'schedules', dateStr), newDayData); } catch (err) { console.error(err); }
+  };
+
+  /**
+   * 指定された日の「夕食が必要な人数」を算出する
+   * (「夕食不要」にチェックが入っていないメンバーの総数)
+   */
   const getDinnerCount = (dateStr) => {
     const dayData = schedules[dateStr] || {};
     let count = 0;
+    const effectiveOptions = statusOptions.length > 0 ? statusOptions : INITIAL_STATUS_OPTIONS;
     members.forEach((member) => {
       const items = dayData[member.id] || [];
       const hasNoDinner = items.some(item => {
         const id = typeof item === 'string' ? item : item.id;
-        const opt = STATUS_OPTIONS.find(o => o.id === id);
+        const opt = effectiveOptions.find(o => o.id === id);
         return opt && opt.dinner === false;
       });
       if (!hasNoDinner) count++;
@@ -253,6 +387,9 @@ export default function App() {
     return count;
   };
 
+  /**
+   * 表示されている1週目（月〜日）の全予定を、2週目（翌週の月〜日）にコピーする
+   */
   const copyToNextWeek = async () => {
     const batchPromises = [];
     for (let i = 0; i < 7; i++) {
@@ -277,7 +414,14 @@ export default function App() {
 
   return (
     // 画面全体を固定し、内部のテーブルだけスクロールさせるレイアウト
-    <div className="h-[100dvh] bg-slate-50 text-slate-900 font-sans flex flex-col overflow-hidden">
+    <div className="h-[100dvh] bg-slate-50 text-slate-900 font-sans flex flex-col overflow-hidden relative">
+      {/* 設定救済用（表示が消えた場合などにクリック） */}
+      <button 
+        onClick={forceResetOptions}
+        className="fixed bottom-2 right-2 opacity-20 hover:opacity-100 text-[8px] bg-slate-200 px-2 py-1 rounded z-[100]"
+      >
+        表示リセット
+      </button>
       {/* 常に上部に固定されるヘッダー */}
       <header className="shrink-0 bg-white border-b border-slate-200 px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between shadow-sm z-40 relative">
         <div className="flex items-center gap-1.5 sm:gap-2">
@@ -378,8 +522,13 @@ export default function App() {
                         )}
 
                         <div className="mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-slate-200/50 flex flex-col items-center w-full">
-                          <IconUtensils className={`w-3 h-3 sm:w-3.5 sm:h-3.5 mb-0.5 ${dinnerCount > 0 ? "text-orange-500" : "text-slate-300"}`} />
-                          <span className={`text-[9px] sm:text-[11px] font-black leading-none ${dinnerCount > 0 ? "text-orange-600" : "text-slate-300"}`}>{dinnerCount}</span>
+                          <div className="relative">
+                            <IconUtensils className={`w-3 h-3 sm:w-3.5 sm:h-3.5 mb-0.5 ${dinnerCount < members.length ? "text-red-500 drop-shadow-sm" : (dinnerCount > 0 ? "text-orange-500" : "text-slate-300")}`} />
+                            {dinnerCount < members.length && (
+                              <div className="absolute -top-1 -right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full border border-white animate-pulse shadow-sm"></div>
+                            )}
+                          </div>
+                          <span className={`text-[9px] sm:text-[11px] font-black leading-none ${dinnerCount < members.length ? "text-red-600" : (dinnerCount > 0 ? "text-orange-600" : "text-slate-300")}`}>{dinnerCount}</span>
                         </div>
                       </div>
                     </td>
@@ -388,12 +537,15 @@ export default function App() {
                     {members.map((member) => {
                       const items = schedules[dateStr]?.[member.id] || [];
                       
-                      // 予定をSTATUS_OPTIONSの順序に固定ソートする
+                      // 表示オプションの取得（ステータスが読み込み中の場合は初期設定をフォールバックとして使用）
+                      const effectiveOptions = statusOptions.length > 0 ? statusOptions : INITIAL_STATUS_OPTIONS;
+
+                      // statusOptionsの順序に固定ソートする
                       const sortedItems = [...items].sort((a, b) => {
                         const idA = typeof a === 'string' ? a : a.id;
                         const idB = typeof b === 'string' ? b : b.id;
-                        const indexA = STATUS_OPTIONS.findIndex(o => o.id === idA);
-                        const indexB = STATUS_OPTIONS.findIndex(o => o.id === idB);
+                        const indexA = effectiveOptions.findIndex(o => o.id === idA);
+                        const indexB = effectiveOptions.findIndex(o => o.id === idB);
                         const orderA = indexA !== -1 ? indexA : 999;
                         const orderB = indexB !== -1 ? indexB : 999;
                         return orderA - orderB;
@@ -407,17 +559,41 @@ export default function App() {
                               sortedItems.map((item, i) => {
                                 const id = typeof item === 'string' ? item : item.id;
                                 const detail = typeof item === 'string' ? null : item.detail;
-                                const opt = STATUS_OPTIONS.find(o => o.id === id);
+                                
+                                const opt = effectiveOptions.find(o => o.id === id);
+                                
                                 if (!opt) return null;
-                                const SIcon = opt.Icon;
+
+                                const SIcon = ICON_MAP[opt.iconId] || IconMessage;
+                                const isComment = id === 'comment';
+
+                                const parts = typeof detail === 'string' ? detail.split('|') : null;
+                                const subtitle = parts?.length > 1 ? parts[0] : null;
+                                const mainDetail = parts?.length > 1 ? parts[1] : detail;
+
                                 return (
-                                  <div key={i} className={`flex flex-col items-center justify-center p-0.5 sm:p-1 rounded sm:rounded-lg ${opt.color} border border-slate-200 shadow-sm transition-transform active:scale-95 overflow-hidden`}>
-                                    <SIcon {...(opt.iconProps || {})} className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    <span className="text-[7.5px] sm:text-[10px] font-bold text-slate-800 leading-tight mt-0.5 text-center truncate w-full">{opt.label}</span>
-                                    {detail && (
-                                      <span className="text-[6px] sm:text-[8px] text-indigo-700 font-bold mt-0.5 bg-white/70 px-0.5 sm:px-1 rounded truncate w-full text-center tracking-tighter leading-tight" title={detail}>
-                                        {detail}
-                                      </span>
+                                  <div key={i} className={isComment 
+                                    ? "flex flex-row items-start gap-1 p-0.5 w-full mt-1 border-t border-slate-100 pt-1" 
+                                    : `flex flex-col items-center justify-center p-0.5 sm:p-1 rounded sm:rounded-lg ${opt.color} border border-slate-200 shadow-sm transition-transform active:scale-95 overflow-hidden`
+                                  }>
+                                    {isComment ? (
+                                      <>
+                                        <span className="text-[7.5px] sm:text-[10px] line-clamp-2 break-all text-slate-600 font-bold tracking-tighter leading-tight text-left" title={detail}>
+                                          {detail}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <SIcon {...(opt.iconProps || {})} className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        <span className="text-[7.5px] sm:text-[10px] font-bold text-slate-800 leading-tight mt-0.5 text-center truncate w-full">
+                                          {subtitle || opt.label}
+                                        </span>
+                                        {mainDetail && (
+                                          <span className="text-[7.5px] sm:text-[10px] line-clamp-2 break-all text-indigo-700 font-bold mt-0.5 bg-white/70 px-0.5 sm:px-1 rounded w-full text-center tracking-tighter leading-tight" title={mainDetail}>
+                                            {mainDetail}
+                                          </span>
+                                        )}
+                                      </>
                                     )}
                                   </div>
                                 );
@@ -449,11 +625,11 @@ export default function App() {
             
             <div className="p-6 overflow-y-auto space-y-6 bg-slate-50/30">
               <div className="grid grid-cols-2 gap-4 pb-6 border-b-2 border-slate-200/60 border-dashed">
-                {STATUS_OPTIONS.filter(o => ['no_dinner', 'day_off'].includes(o.id)).map((opt) => {
+                {(statusOptions.length > 0 ? statusOptions : INITIAL_STATUS_OPTIONS).filter(o => ['no_dinner', 'day_off'].includes(o.id)).map((opt) => {
                   const items = schedules[selectedCell.dateStr]?.[selectedCell.memberId] || [];
                   const found = items.find(i => (typeof i === 'string' ? i : i.id) === opt.id);
                   const isSelected = !!found;
-                  const OptIcon = opt.Icon;
+                  const OptIcon = ICON_MAP[opt.iconId] || IconMessage;
 
                   const activeBorder = opt.id === 'no_dinner' ? 'border-red-400 ring-red-100' : 'border-orange-400 ring-orange-100';
                   const activeBg = opt.id === 'no_dinner' ? 'bg-red-50 text-red-800' : 'bg-orange-50 text-orange-800';
@@ -474,11 +650,11 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                {STATUS_OPTIONS.filter(o => !['no_dinner', 'day_off'].includes(o.id)).map((opt) => {
+                {(statusOptions.length > 0 ? statusOptions : INITIAL_STATUS_OPTIONS).filter(o => !['no_dinner', 'day_off', 'comment'].includes(o.id)).map((opt) => {
                   const items = schedules[selectedCell.dateStr]?.[selectedCell.memberId] || [];
                   const found = items.find(i => (typeof i === 'string' ? i : i.id) === opt.id);
                   const isSelected = !!found;
-                  const OptIcon = opt.Icon;
+                  const OptIcon = ICON_MAP[opt.iconId] || IconMessage;
 
                   return (
                     <div key={opt.id} className="flex flex-col gap-2">
@@ -521,9 +697,8 @@ export default function App() {
                               initialValue={found.detail?.split('〜')[0] || ""} 
                               defaultTime="09:00"
                               onSave={(v) => {
-                                const end = found.detail?.split('〜')[1];
-                                const newEnd = end || calculateEndTime(v);
-                                updateDetail(opt.id, `${v}〜${newEnd}`);
+                                const end = found.detail?.split('〜')[1] || "";
+                                updateDetail(opt.id, `${v}〜${end}`);
                               }} 
                             />
                           </div>
@@ -532,15 +707,58 @@ export default function App() {
                             <DetailInput 
                               type="time" 
                               initialValue={found.detail?.split('〜')[1] || ""} 
-                              defaultTime={() => {
-                                const start = found.detail?.split('〜')[0] || "09:00";
-                                return calculateEndTime(start);
-                              }}
+                              defaultTime="09:00"
                               onSave={(v) => {
-                                const start = found.detail?.split('〜')[0] || "09:00";
+                                const start = found.detail?.split('〜')[0] || "";
                                 updateDetail(opt.id, `${start}〜${v}`);
                               }} 
                             />
+                          </div>
+                        </div>
+                      )}
+
+                      {isSelected && opt.hasDetail === 'place_time' && (
+                        <div className="p-3 bg-white rounded-2xl border border-indigo-100 shadow-sm space-y-3">
+                          <div className="space-y-1 text-left">
+                            <label className="text-[10px] font-black text-slate-400 ml-1 block">行き先</label>
+                            <DetailInput 
+                              initialValue={found.detail?.includes('|') ? found.detail.split('|')[0] : ""} 
+                              onSave={(v) => {
+                                const time = found.detail?.includes('|') ? found.detail.split('|')[1] : (found.detail?.includes('〜') ? found.detail : "");
+                                updateDetail(opt.id, v ? `${v}|${time}` : time);
+                              }} 
+                              placeholder={opt.placeholder || "例：ディズニー、眼科"}
+                            />
+                          </div>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="flex-1 space-y-1 text-left">
+                              <label className="text-[10px] font-black text-slate-400 ml-1 block">START</label>
+                              <DetailInput 
+                                type="time" 
+                                initialValue={(found.detail?.includes('|') ? found.detail.split('|')[1] : found.detail)?.split('〜')[0] || ""} 
+                                defaultTime="09:00"
+                                onSave={(v) => {
+                                  const place = found.detail?.includes('|') ? found.detail.split('|')[0] : "";
+                                  const end = (found.detail?.includes('|') ? found.detail.split('|')[1] : found.detail)?.split('〜')[1] || "";
+                                  const newTime = `${v}〜${end}`;
+                                  updateDetail(opt.id, place ? `${place}|${newTime}` : newTime);
+                                }} 
+                              />
+                            </div>
+                            <div className="flex-1 space-y-1 text-left">
+                              <label className="text-[10px] font-black text-slate-400 ml-1 block">END</label>
+                              <DetailInput 
+                                type="time" 
+                                initialValue={(found.detail?.includes('|') ? found.detail.split('|')[1] : found.detail)?.split('〜')[1] || ""} 
+                                defaultTime="09:00"
+                                onSave={(v) => {
+                                  const place = found.detail?.includes('|') ? found.detail.split('|')[0] : "";
+                                  const start = (found.detail?.includes('|') ? found.detail.split('|')[1] : found.detail)?.split('〜')[0] || "";
+                                  const newTime = `${start}〜${v}`;
+                                  updateDetail(opt.id, place ? `${place}|${newTime}` : newTime);
+                                }} 
+                              />
+                            </div>
                           </div>
                         </div>
                       )}
@@ -556,20 +774,24 @@ export default function App() {
                           />
                         </div>
                       )}
-
-                      {isSelected && opt.hasDetail === 'text' && (
-                        <div className="p-3 bg-white rounded-2xl border border-indigo-100 shadow-sm text-left">
-                          <label className="text-[10px] font-black text-slate-400 ml-1 mb-1 block">自由入力メモ</label>
-                          <DetailInput 
-                            initialValue={found.detail || ""} 
-                            onSave={(v) => updateDetail(opt.id, v)} 
-                            placeholder="内容を入力..."
-                          />
-                        </div>
-                      )}
                     </div>
                   );
                 })}
+              </div>
+
+              {/* 独立したメモ入力セクション */}
+              <div className="p-5 bg-white rounded-[2rem] border-2 border-slate-200 shadow-sm text-left">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="p-2 bg-slate-100 rounded-xl text-slate-500"><IconMessage /></div>
+                  <label className="text-sm font-black text-slate-700">自由入力メモ</label>
+                  <span className="text-[10px] font-bold text-slate-400 ml-auto">最大50文字</span>
+                </div>
+                <DetailInput 
+                  initialValue={(schedules[selectedCell.dateStr]?.[selectedCell.memberId] || []).find(i => (typeof i === 'string' ? i : i.id) === 'comment')?.detail || ""} 
+                  onSave={(v) => updateMemo(v)} 
+                  placeholder="予定の詳細やメモを入力..."
+                  maxLength={50}
+                />
               </div>
             </div>
           </div>
