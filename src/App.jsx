@@ -168,6 +168,7 @@ export default function App() {
   const [selectedCell, setSelectedCell] = useState(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
+  const [selectedForCopy, setSelectedForCopy] = useState([]);
   const [memberModal, setMemberModal] = useState({ isOpen: false, type: 'add', id: null, name: '' });
   
   const [loading, setLoading] = useState(true);
@@ -388,17 +389,32 @@ export default function App() {
   };
 
   /**
-   * 表示されている1週目（月〜日）の全予定を、2週目（翌週の月〜日）にコピーする
+   * 表示されている1週目（月〜日）の選択されたメンバーの予定を、2週目（翌週の月〜日）にコピーする
    */
   const copyToNextWeek = async () => {
+    if (selectedForCopy.length === 0) {
+      alert("コピーするメンバーを選択してください。");
+      return;
+    }
     const batchPromises = [];
     for (let i = 0; i < 7; i++) {
       const sourceDateStr = formatDate(dateList[i]);
       const targetDateStr = formatDate(dateList[i + 7]);
       
       const sourceData = schedules[sourceDateStr] || {};
+      const targetData = schedules[targetDateStr] || {};
+      
+      const newTargetData = { ...targetData };
+      selectedForCopy.forEach(memberId => {
+        if (sourceData[memberId]) {
+          newTargetData[memberId] = sourceData[memberId];
+        } else {
+          delete newTargetData[memberId];
+        }
+      });
+
       const docRef = doc(db, 'schedules', targetDateStr);
-      batchPromises.push(setDoc(docRef, sourceData));
+      batchPromises.push(setDoc(docRef, newTargetData));
     }
 
     try {
@@ -434,7 +450,7 @@ export default function App() {
           <button onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 7)))} className="p-1.5 sm:p-2 hover:bg-slate-100 rounded-full transition-colors"><IconChevronRight /></button>
           
           <div className="w-px h-5 bg-slate-200 mx-1 sm:mx-2 hidden sm:block"></div>
-          <button onClick={() => setIsCopyModalOpen(true)} className="flex items-center gap-1 px-2.5 py-1.5 hover:bg-indigo-50 text-indigo-600 rounded-full transition-colors font-bold text-[10px] sm:text-xs" title="1週目の予定を2週目にコピー">
+          <button onClick={() => { setIsCopyModalOpen(true); setSelectedForCopy([]); }} className="flex items-center gap-1 px-2.5 py-1.5 hover:bg-indigo-50 text-indigo-600 rounded-full transition-colors font-bold text-[10px] sm:text-xs" title="1週目の予定を2週目にコピー">
             <IconCopy /> <span className="hidden md:inline">次週へコピー</span>
           </button>
           <button onClick={() => setIsSettingsOpen(true)} className="p-1.5 sm:p-2 hover:bg-indigo-50 text-indigo-600 rounded-full transition-colors" title="メンバー設定">
@@ -929,14 +945,43 @@ export default function App() {
                 <span className="text-indigo-700 bg-indigo-50 px-2 py-1 rounded mt-1 inline-block">
                   {dateList[7].toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })} 〜 {dateList[13].toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}
                 </span>
-                <br/>にコピーしますか？<br/>
-                <span className="text-xs text-red-500 mt-2 inline-block">※コピー先のすでにある予定は上書きされます。</span>
+                <br/>にコピーする人を選択してください。<br/>
+                <span className="text-xs text-red-500 mt-2 inline-block">※コピー先の選択した人の予定は上書きされます。</span>
               </p>
             </div>
+
+            <div className="mt-6 flex flex-col gap-2 max-h-[30vh] overflow-y-auto pr-1">
+              {members.map(member => {
+                const isSelected = selectedForCopy.includes(member.id);
+                return (
+                  <button 
+                    key={`copy-${member.id}`}
+                    onClick={() => {
+                      if (isSelected) {
+                        setSelectedForCopy(selectedForCopy.filter(id => id !== member.id));
+                      } else {
+                        setSelectedForCopy([...selectedForCopy, member.id]);
+                      }
+                    }} 
+                    className={`flex items-center justify-between p-3 sm:p-4 border-2 rounded-2xl transition-all ${isSelected ? 'bg-indigo-50 border-indigo-500' : 'bg-slate-50 border-slate-200 hover:border-indigo-300'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-full shadow-sm transition-colors ${isSelected ? 'bg-indigo-600 text-white' : 'bg-white text-slate-400'}`}>
+                        <IconUser />
+                      </div>
+                      <span className={`font-bold transition-colors ${isSelected ? 'text-indigo-800' : 'text-slate-700'}`}>{member.name}</span>
+                    </div>
+                    <div className={`flex items-center gap-1 text-xs font-bold transition-opacity ${isSelected ? 'text-indigo-600 opacity-100' : 'opacity-0'}`}>
+                      <IconCheck className="w-4 h-4" /> 選択中
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
             
-            <div className="mt-8 flex gap-3">
+            <div className="mt-6 flex gap-3 pt-2 border-t border-slate-100">
               <button onClick={() => setIsCopyModalOpen(false)} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-colors">キャンセル</button>
-              <button onClick={copyToNextWeek} className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 active:scale-95 transition-all hover:bg-indigo-700">コピーを実行</button>
+              <button onClick={copyToNextWeek} disabled={selectedForCopy.length === 0} className={`flex-1 py-3.5 text-white rounded-2xl font-bold transition-all ${selectedForCopy.length > 0 ? 'bg-indigo-600 shadow-lg shadow-indigo-200 active:scale-95 hover:bg-indigo-700' : 'bg-slate-300 cursor-not-allowed'}`}>コピーを実行</button>
             </div>
           </div>
         </div>
